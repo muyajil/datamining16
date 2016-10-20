@@ -9,7 +9,21 @@ MAX_SHINGLE_ID = 8193
 # After trying to plot and tune to find the optimal parameters we tried finding them programmatically
 # to yield the parameters that have root(1-(1-x^17)^10 - 0.5) as close as possible to 0.85
 # by trying a lot of different combinations that match the criteria
-# We got 0.8499 for r_and = 25 and b_or = 40
+# We got 0.8499 for r_and = 25 and b_or = 40 -> this takes really long to compute
+# Therefore we found the top 10 best estimations and tried one with smaller params
+'''
+Top 10 Estimates
+
+1:      25      40      0.849963587962
+2:      16      9       0.849909922397
+3:      24      34      0.849908093023
+4:      23      29      0.84971177389
+5:      19      15      0.849565296109
+6:      21      21      0.849409416841
+7:      22      24      0.850635569477
+8:      25      39      0.850817253854
+9:      22      25      0.849080827864
+'''
 
 
 # Best score so far: 0.95/0.90, 15/15
