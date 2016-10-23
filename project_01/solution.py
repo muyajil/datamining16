@@ -60,6 +60,8 @@ Important is that we have FP=50 and FN=0, this tells us we have not missed any d
 
 So the next step is to find out how much we can increase the number of hash functions, without taking too long to compute.
 
+!!!! test this again !!!!
+
 Top 10 Estimates using 300-350 hash functions:
 
 1:      300     1       0.997692176527
