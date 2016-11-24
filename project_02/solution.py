@@ -10,7 +10,7 @@ def learning_rate(t):
 
 def mapper(key, value):
     # key: None
-    # value: one line of input file
+    # value: 5k lines, each (y | x0 | .. | x399)
 
     num_samples = len(value)
 
