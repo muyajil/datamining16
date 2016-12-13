@@ -2,13 +2,19 @@ import numpy as np
 import math
 
 # number of bicriteria points in the D2 sampling
-k = 15
+k = 200
 
 # number of representatives each mapper produces
-kk = 20
+kk = 200
+
+# number of representatives to produce
+kr = 200
 
 # number of data points for each mapper
 N = 10000
+
+# number of mappers
+nm = 10
 
 def mapper(key, value):
 
@@ -25,7 +31,7 @@ def mapper(key, value):
     # For each point, initialize its distance to the distance to the first
     # bicriteria point
     for i in range(N):
-	D[i] = np.linalg.norm(value[i]-B[0])**2
+	D[i] = np.linalg.norm(value[i]-B[0])
 
     # In each step, sample a data point as new center proportional to
     # squared distance to existing cluster centers
@@ -38,7 +44,7 @@ def mapper(key, value):
 
         # update distances
 	for i in range(N):
-	    newD = np.linalg.norm(value[i]-B[b])**2
+	    newD = np.linalg.norm(value[i]-B[b])
             if D[i] > newD:
 		D[i] = newD
 		Mins[i] = b
@@ -73,7 +79,7 @@ def mapper(key, value):
     for i in range(kk):
 	representatives[i] = value[representatives_num[i]]
 
-    print str(representatives.shape)
+    print 'mapper done'
 
     # All mappers should output the same key
     yield "key", representatives
@@ -84,5 +90,71 @@ def reducer(key, values):
     # values: list of all value for that key
     # Note that we do *not* output a (key, value) pair here.
 
-    # use coreset composition here
-    yield values
+    # 3rd approach: d2 sampling + k-means
+    ##############################################
+    # 1. D^2 sampling (bicriteria approximation) #
+    ##############################################
+    np.random.shuffle(values)
+    B = np.zeros((kr, 250))
+    B[0] = values[0]
+    NN = kk * nm		# number of points for the reducer
+    D = np.zeros(NN)
+    Mins = [0]*(NN)
+    for i in range(NN):
+	D[i] = np.linalg.norm(values[i]-B[0])**2
+    for b in range(kr):
+        prob = np.divide(np.square(D), np.sum(np.square(D)))
+        newCenter = np.random.choice(range(NN), p=prob)
+	B[b] = values[newCenter]
+	for i in range(NN):
+	    newD = np.linalg.norm(values[i]-B[b])**2
+            if D[i] > newD:
+		D[i] = newD
+		Mins[i] = b
+    ##############################################
+    # 2. standard K-means                        #
+    ##############################################
+    # B = centers
+    # Mins = nearest center for each point
+    steps = 0
+    while True:
+
+        # 1. Assignment step
+	for i in range(NN):
+   	    mindist = np.linalg.norm(values[i]-B[0])
+	    Mins[i] = 0
+	    for b in range(kr):
+		distance = np.linalg.norm(values[i]-B[b])
+                if mindist > distance:
+		    Mins[i] = b
+		    mindist = distance
+
+        # 2. Update step
+	oldB = B
+        B = np.zeros((kr, 250))
+        ClusterCount = np.zeros(kr)
+        for i in range(NN):
+            B[Mins[i]] += values[i]
+	    ClusterCount[Mins[i]] += 1
+	for b in range(kr):
+	    B[b] = np.divide(B[b], ClusterCount[b])
+
+	# 3. Convergence
+        steps+=1
+        print 'kmean step'
+	if np.array_equal(oldB, B) or steps == 30:
+	    break
+
+    yield B
+
+    # 2nd approach: merge AND compression
+
+    # 1st approach: use coreset composition here
+    #yield values
+
+
+
+
+
+
+
